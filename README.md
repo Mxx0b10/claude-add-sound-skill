@@ -86,6 +86,11 @@ the generated CREDITS file wherever you publish the video.
 Openverse's anonymous API is rate-limited. For heavy use, register free API credentials and set
 `OPENVERSE_CLIENT_ID` / `OPENVERSE_CLIENT_SECRET`.
 
+## License
+
+The skill's code and docs are MIT licensed (see [LICENSE](LICENSE)). The MIT license covers this
+repo only; downloaded sounds keep their own licenses (see above).
+
 ## Note
 
 Claude can't listen to the result. Timing, levels and loudness are measured and verified; taste
