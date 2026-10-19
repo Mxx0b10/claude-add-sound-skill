@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Run one of this skill's Python scripts with a private venv that has numpy.
+# Usage: run <script-name> [args...]     e.g.  run probe ~/Downloads/video.mp4 --out /tmp/work
+set -euo pipefail
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+VENV="${ADD_SOUND_VENV:-$HOME/.cache/claude-add-sound/venv}"
+if [ ! -x "$VENV/bin/python" ] || ! "$VENV/bin/python" -c "import numpy" 2>/dev/null; then
+  echo "[add-sound] setting up Python venv in $VENV (one time)…" >&2
+  mkdir -p "$(dirname "$VENV")"
+  python3 -m venv "$VENV" >&2
+  "$VENV/bin/pip" install -q --disable-pip-version-check numpy >&2
+fi
+command -v ffmpeg >/dev/null || { echo "[add-sound] ffmpeg not found. Install it: brew install ffmpeg" >&2; exit 1; }
+command -v ffprobe >/dev/null || { echo "[add-sound] ffprobe not found. Install it: brew install ffmpeg" >&2; exit 1; }
+script="${1:?usage: run <script> [args]}"; shift
+exec "$VENV/bin/python" -I "$DIR/${script%.py}.py" "$@"

@@ -1,0 +1,478 @@
+{
+ "video": "cortex-launch-4k-16x9.mp4 (30 s, 4K60, 16:9)",
+ "duration": 30.0,
+ "music_gain_db": -1.5,
+ "end_fade": 0.25,
+ "events": [
+  {
+   "sound": "freesound-790646",
+   "at": 1.15,
+   "bus": "music",
+   "src": 0.0,
+   "length": 23.05,
+   "fade_in": 0.5,
+   "fade_out": 0.02,
+   "label": "music body: track drums (1.50s) land on the 2.65s cut to dark"
+  },
+  {
+   "sound": "freesound-790646",
+   "at": 25.4,
+   "bus": "music",
+   "src": 25.62,
+   "length": 4.38,
+   "fade_in": 0.35,
+   "fade_out": 0.6,
+   "gain": 6,
+   "label": "music tail: track's closing chord under the logo resolve"
+  },
+  {
+   "sound": "freesound-632344",
+   "at": 0.0,
+   "reverse": true,
+   "tail": 1.1,
+   "fade_in": 1.0,
+   "fade_in_curve": 2.0,
+   "align": 0.18,
+   "gain": -9,
+   "label": "particles gather into logo (reverse shimmer ends 0.92)",
+   "sync": false
+  },
+  {
+   "sound": "freesound-614833",
+   "at": 0.9,
+   "st": -1,
+   "hp": 1500,
+   "gain": -15,
+   "label": "logo lock ting (bell tuned to D)"
+  },
+  {
+   "sound": "freesound-506546",
+   "at": 0.9,
+   "gain": -12,
+   "label": "logo lock pop"
+  },
+  {
+   "sound": "freesound-384187",
+   "at": 1.28,
+   "st": 0,
+   "align": 0.06,
+   "gain": -4,
+   "pan": -0.15,
+   "label": "wordmark type tick 1"
+  },
+  {
+   "sound": "freesound-384187",
+   "at": 1.35,
+   "st": 2,
+   "align": 0.06,
+   "gain": -4,
+   "pan": -0.09,
+   "label": "wordmark type tick 2"
+  },
+  {
+   "sound": "freesound-384187",
+   "at": 1.42,
+   "st": -1,
+   "align": 0.06,
+   "gain": -4,
+   "pan": -0.03,
+   "label": "wordmark type tick 3"
+  },
+  {
+   "sound": "freesound-384187",
+   "at": 1.49,
+   "st": 3,
+   "align": 0.06,
+   "gain": -4,
+   "pan": 0.03,
+   "label": "wordmark type tick 4"
+  },
+  {
+   "sound": "freesound-384187",
+   "at": 1.56,
+   "st": 1,
+   "align": 0.06,
+   "gain": -4,
+   "pan": 0.09,
+   "label": "wordmark type tick 5"
+  },
+  {
+   "sound": "freesound-384187",
+   "at": 1.63,
+   "st": 4,
+   "align": 0.06,
+   "gain": -4,
+   "pan": 0.15,
+   "label": "wordmark type tick 6"
+  },
+  {
+   "sound": "freesound-507466",
+   "at": 2.2,
+   "align": 0.27,
+   "gain": -8,
+   "pan": -0.2,
+   "label": "cyan flash swoosh"
+  },
+  {
+   "sound": "freesound-560156",
+   "at": 2.65,
+   "gain": -9,
+   "label": "cut to dark impact"
+  },
+  {
+   "sound": "freesound-426191",
+   "at": 3.2,
+   "hp": 900,
+   "fade_in": 0.15,
+   "fade_out": 0.35,
+   "gain": -17,
+   "label": "blueprint grid lines data",
+   "sync": false
+  },
+  {
+   "sound": "freesound-351256",
+   "at": 5.4,
+   "align": "peak",
+   "gain": -7,
+   "label": "logo zoom whoosh"
+  },
+  {
+   "sound": "freesound-614153",
+   "at": 6.25,
+   "align": 0.83,
+   "gain": 4,
+   "label": "headline reveal"
+  },
+  {
+   "sound": "freesound-425700",
+   "at": 8.3,
+   "align": "peak",
+   "gain": -10,
+   "label": "circle wipe low"
+  },
+  {
+   "sound": "freesound-614151",
+   "at": 8.33,
+   "align": 0.5,
+   "gain": -3,
+   "pan": 0.25,
+   "label": "circle wipe air"
+  },
+  {
+   "sound": "freesound-614156",
+   "at": 9.0,
+   "align": 0.88,
+   "gain": -6,
+   "pan": -0.3,
+   "label": "cards fly in"
+  },
+  {
+   "sound": "freesound-507466",
+   "at": 11.35,
+   "align": 0.27,
+   "gain": -10,
+   "pan": 0.2,
+   "label": "cards to grid"
+  },
+  {
+   "sound": "freesound-506545",
+   "at": 11.4,
+   "st": 0,
+   "gain": -11,
+   "pan": -0.3,
+   "label": "tile pop 1"
+  },
+  {
+   "sound": "freesound-506545",
+   "at": 11.55,
+   "st": 3,
+   "gain": -11,
+   "pan": 0.3,
+   "label": "tile pop 2"
+  },
+  {
+   "sound": "freesound-506545",
+   "at": 11.65,
+   "st": 5,
+   "gain": -11,
+   "pan": 0.0,
+   "label": "tile pop 3"
+  },
+  {
+   "sound": "freesound-384187",
+   "at": 11.78,
+   "st": 1,
+   "align": 0.06,
+   "gain": -6,
+   "pan": 0.3,
+   "label": "tile type tick 1"
+  },
+  {
+   "sound": "freesound-384187",
+   "at": 11.85,
+   "st": 3,
+   "align": 0.06,
+   "gain": -6,
+   "pan": 0.3,
+   "label": "tile type tick 2"
+  },
+  {
+   "sound": "freesound-384187",
+   "at": 11.92,
+   "st": 0,
+   "align": 0.06,
+   "gain": -6,
+   "pan": 0.3,
+   "label": "tile type tick 3"
+  },
+  {
+   "sound": "freesound-384187",
+   "at": 11.99,
+   "st": 4,
+   "align": 0.06,
+   "gain": -6,
+   "pan": 0.3,
+   "label": "tile type tick 4"
+  },
+  {
+   "sound": "freesound-384187",
+   "at": 12.06,
+   "st": 2,
+   "align": 0.06,
+   "gain": -6,
+   "pan": 0.3,
+   "label": "tile type tick 5"
+  },
+  {
+   "sound": "freesound-384187",
+   "at": 12.13,
+   "st": 5,
+   "align": 0.06,
+   "gain": -6,
+   "pan": 0.3,
+   "label": "tile type tick 6"
+  },
+  {
+   "sound": "freesound-506546",
+   "at": 13.42,
+   "st": -2,
+   "gain": -12,
+   "label": "search tile"
+  },
+  {
+   "sound": "freesound-250390",
+   "at": 13.42,
+   "src": 0.0,
+   "length": 1.1,
+   "tempo": 2.0,
+   "hp": 300,
+   "fade_out": 0.15,
+   "gain": 1,
+   "pan": -0.2,
+   "label": "search bar typing (2x speed)"
+  },
+  {
+   "sound": "freesound-614151",
+   "at": 14.88,
+   "align": 0.5,
+   "gain": -4,
+   "label": "grid clears to poster"
+  },
+  {
+   "sound": "freesound-561207",
+   "at": 16.52,
+   "align": 2.0,
+   "gain": -11,
+   "label": "zoom riser into poster cut",
+   "sync": false
+  },
+  {
+   "sound": "freesound-507466",
+   "at": 16.52,
+   "align": 0.27,
+   "gain": -7,
+   "pan": 0.0,
+   "label": "word card cut 16.52"
+  },
+  {
+   "sound": "freesound-614151",
+   "at": 18.35,
+   "align": 0.5,
+   "gain": -5,
+   "pan": -0.25,
+   "label": "word card cut 18.35"
+  },
+  {
+   "sound": "freesound-507466",
+   "at": 20.1,
+   "align": 0.27,
+   "gain": -8,
+   "pan": 0.25,
+   "label": "word card cut 20.1"
+  },
+  {
+   "sound": "freesound-614151",
+   "at": 21.8,
+   "align": 0.5,
+   "gain": -5,
+   "pan": -0.25,
+   "label": "word card cut 21.8"
+  },
+  {
+   "sound": "freesound-507466",
+   "at": 23.0,
+   "align": 0.27,
+   "gain": -8,
+   "pan": 0.25,
+   "label": "word card cut 23.0"
+  },
+  {
+   "sound": "freesound-506545",
+   "at": 16.92,
+   "st": 0,
+   "gain": -14,
+   "label": "word lands 1"
+  },
+  {
+   "sound": "freesound-506545",
+   "at": 18.5,
+   "st": 2,
+   "gain": -14,
+   "label": "word lands 2"
+  },
+  {
+   "sound": "freesound-506545",
+   "at": 20.25,
+   "st": 4,
+   "gain": -14,
+   "label": "word lands 3"
+  },
+  {
+   "sound": "freesound-506545",
+   "at": 21.95,
+   "st": 5,
+   "gain": -14,
+   "label": "word lands 4"
+  },
+  {
+   "sound": "freesound-426191",
+   "at": 23.02,
+   "st": 3,
+   "hp": 1200,
+   "fade_in": 0.05,
+   "fade_out": 0.3,
+   "gain": -18,
+   "pan": 0.3,
+   "label": "ascii particle swarm",
+   "sync": false
+  },
+  {
+   "sound": "freesound-561207",
+   "at": 24.2,
+   "st": 2,
+   "align": 1.7818,
+   "gain": -9,
+   "label": "riser into 'No noise.' stop",
+   "sync": false
+  },
+  {
+   "sound": "freesound-560156",
+   "at": 24.2,
+   "lp": 500,
+   "length": 0.95,
+   "fade_out": 0.7,
+   "gain": -11,
+   "label": "'No noise.' thud (music hard-stops here)"
+  },
+  {
+   "sound": "freesound-614156",
+   "at": 25.08,
+   "align": 0.88,
+   "gain": -6,
+   "pan": -0.35,
+   "label": "wipe to cream"
+  },
+  {
+   "sound": "freesound-691805",
+   "at": 25.42,
+   "st": -1,
+   "echo": "0.8:0.5:70|140:0.25|0.15",
+   "gain": -4,
+   "pan": -0.4,
+   "label": "letter pluck 1 (F#m7 arpeggio)"
+  },
+  {
+   "sound": "freesound-691805",
+   "at": 25.5,
+   "st": 2,
+   "echo": "0.8:0.5:70|140:0.25|0.15",
+   "gain": -4,
+   "pan": -0.24,
+   "label": "letter pluck 2 (F#m7 arpeggio)"
+  },
+  {
+   "sound": "freesound-691805",
+   "at": 25.57,
+   "st": 6,
+   "echo": "0.8:0.5:70|140:0.25|0.15",
+   "gain": -4,
+   "pan": -0.08,
+   "label": "letter pluck 3 (F#m7 arpeggio)"
+  },
+  {
+   "sound": "freesound-691805",
+   "at": 25.63,
+   "st": 9,
+   "echo": "0.8:0.5:70|140:0.25|0.15",
+   "gain": -4,
+   "pan": 0.08,
+   "label": "letter pluck 4 (F#m7 arpeggio)"
+  },
+  {
+   "sound": "freesound-691805",
+   "at": 25.69,
+   "st": 11,
+   "echo": "0.8:0.5:70|140:0.25|0.15",
+   "gain": -4,
+   "pan": 0.24,
+   "label": "letter pluck 5 (F#m7 arpeggio)"
+  },
+  {
+   "sound": "freesound-691805",
+   "at": 25.75,
+   "st": 14,
+   "echo": "0.8:0.5:70|140:0.25|0.15",
+   "gain": -4,
+   "pan": 0.4,
+   "label": "letter pluck 6 (F#m7 arpeggio)"
+  },
+  {
+   "sound": "freesound-632344",
+   "at": 26.4,
+   "reverse": true,
+   "st": 1,
+   "tail": 0.8,
+   "fade_in": 0.7,
+   "fade_in_curve": 2.0,
+   "gain": -10,
+   "label": "particles gather into logo 2",
+   "sync": false
+  },
+  {
+   "sound": "freesound-542561",
+   "at": 27.07,
+   "st": 1,
+   "echo": "0.8:0.6:90|180:0.2|0.12",
+   "align": "onset",
+   "gain": -6,
+   "label": "final logo lock ping (tuned to F#)"
+  },
+  {
+   "sound": "freesound-506546",
+   "at": 27.06,
+   "st": -3,
+   "gain": -13,
+   "label": "final logo lock pop"
+  }
+ ]
+}
