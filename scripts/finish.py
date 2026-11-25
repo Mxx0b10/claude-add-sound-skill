@@ -6,8 +6,12 @@
 - Loudness: iterates gain + a look-ahead limiter until integrated loudness hits the target
   (-14 LUFS = YouTube/social norm) with true peak at or under the ceiling.
 - Video stream is copied untouched (no re-encode, no quality loss). Audio: AAC 320 kbps 48 kHz.
-- Sync check: confirms the muxed audio is not shifted vs. the master (A/V offset), and summarises
-  how close each sfx cue's own attack/peak lands to its frame (measured per sound in `run mix`).
+- Sync check, in two parts that together prove the hits land on their frames:
+  1. per cue: how close each sfx cue's own attack/peak lands to its frame. This is measured on each
+     sound alone while `run mix` renders it (so a louder neighbour can't hide it) and read from
+     mix_raw.report.json, not re-detected in the final file;
+  2. in the final file: cross-correlates the muxed audio with the master WAV, proving the mux kept
+     the timeline (0 ms offset). For a check by ear of the final file, use earshot (see SKILL.md).
 - Writes OUT-CREDITS.md and OUT-soundtrack.wav next to OUT, saves the cue sheet into the
   library's projects/ folder and appends to history.jsonl (that's what fresh/same/mix read).
 """
@@ -21,13 +25,28 @@ def measure(path):
     out = subprocess.run(["ffmpeg", "-hide_banner", "-i", path, "-map", "0:a", "-af", "ebur128=peak=true",
                           "-f", "null", "-"], capture_output=True, text=True).stderr
     s = out[out.rfind("Summary:"):]
-    I = float(s.split("I:")[1].split()[0])
-    P = float(s.split("Peak:")[1].split()[0])
+    try:
+        I = float(s.split("I:")[1].split()[0])
+        P = float(s.split("Peak:")[1].split()[0])
+    except (IndexError, ValueError):
+        raise SystemExit(f"[add-sound] could not measure loudness of {path} (no audio stream?)")
     return I, P
+
+
+def video_duration(path):
+    r = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", path],
+                       capture_output=True, text=True)
+    try:
+        return float(r.stdout.strip())
+    except ValueError:
+        return None
 
 
 def master(raw, out_wav, lufs, tp):
     I, _ = measure(raw)
+    if I < -50:
+        raise SystemExit(f"[add-sound] the mix is near silent ({I:.1f} LUFS); mastering would boost noise by "
+                         f"{lufs - I:.0f} dB. Check the cue sheet (gains, music_gain_db, events outside the video).")
     g = lufs - I
     ceiling = 10 ** ((tp - 1.0) / 20)        # 1 dB headroom for AAC overshoot
     for _ in range(4):
@@ -71,6 +90,10 @@ def credits(cues, out_md, video_name):
     sfx = [s for s in used if idx[s].get("kind") != "music"]
     def link(v):
         return v.get("landing_url") or ""
+    def flag(v):
+        st = (v.get("license_check") or {}).get("status")
+        return "" if st == "ok" else (" ⚠ DELETED/RELICENSED AT SOURCE, see note" if st in ("deleted", "mismatch")
+                                      else " (license from Openverse, not checked at source)")
     def lic(v):
         l = v.get("license", "")
         return "CC0 1.0" if l == "cc0" else (f"CC {l.upper()} {v.get('license_version') or ''}".strip())
@@ -82,18 +105,29 @@ def credits(cues, out_md, video_name):
         for s in need:
             v = idx[s]
             L.append(f"> \"{v.get('title')}\" by {v.get('creator')} ({link(v)}), {lic(v)}")
+            if v.get("license") == "by-sa":
+                L.append(">   ↳ CC BY-SA is share-alike: the soundtrack (not the picture) may have to be "
+                         "shared under CC BY-SA too.")
         L.append("")
     if music:
-        L += ["## Music", ""] + [f"- \"{idx[s].get('title')}\" by {idx[s].get('creator')} — {lic(idx[s])} — {link(idx[s])}"
+        L += ["## Music", ""] + [f"- \"{idx[s].get('title')}\" by {idx[s].get('creator')} — {lic(idx[s])} — {link(idx[s])}{flag(idx[s])}"
                                  for s in music] + [""]
     if sfx:
         L += ["## Sound effects", "", "| Used for | Sound | Author | License | Link |", "|---|---|---|---|---|"]
         for s in sfx:
             v = idx[s]
             uses = sorted({e.get("label", "").split(" (")[0] for e in cues["events"] if e["sound"] == s})
-            L.append(f"| {'; '.join(uses)[:80]} | {v.get('title')} | {v.get('creator')} | {lic(v)} | {link(v)} |")
+            L.append(f"| {'; '.join(uses)[:80]} | {v.get('title')} | {v.get('creator')} | {lic(v)}{flag(v)} | {link(v)} |")
         L.append("")
-    L += ["Sounds may be pitch-shifted, reversed, filtered, time-compressed or trimmed.",
+    bad = [s for s in used if (idx[s].get("license_check") or {}).get("status") in ("deleted", "mismatch")]
+    if bad:
+        L += ["## Note on flagged sounds", "",
+              "These were removed or relicensed at the source after download. The CC license they were "
+              "downloaded under can't be revoked, so this file is your record of it; prefer replacing them "
+              "in new edits.", ""] + [f"- {s}: {(idx[s].get('license_check') or {}).get('note')}" for s in bad] + [""]
+    L += ["Licenses were checked on each sound's source page at download where marked; Freesound pages are",
+          "checked automatically, other sources (Jamendo, Wikimedia) use Openverse's metadata.",
+          "Sounds may be pitch-shifted, reversed, filtered, time-compressed or trimmed.",
           "CC0 sounds need no credit; they are listed for reference."]
     open(out_md, "w").write("\n".join(L) + "\n")
     return used, need
@@ -117,7 +151,12 @@ def main():
     print(f"master: gain {g:+.1f} dB -> {I:.1f} LUFS, true peak {P:.1f} dBTP; "
           f"limiter 90th pct {gr90:.1f} dB, max {grmax:.1f} dB"
           + ("  (WARNING: heavy limiting — lower the loudest elements and re-mix)" if gr90 > 2.5 else ""))
-    dur = str(cues["duration"])
+    vdur = video_duration(a.video)
+    cdur = float(cues["duration"])
+    if vdur and abs(vdur - cdur) > 0.1:
+        print(f"WARNING: cue sheet duration {cdur:.2f}s differs from the video ({vdur:.2f}s); "
+              f"output uses {min(vdur, cdur):.2f}s. Fix `duration` in cues.json if that's wrong.")
+    dur = f"{min(vdur or cdur, cdur):.3f}"
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", a.video, "-i", soundtrack, "-map", "0:v:0", "-map", "1:a:0",
                     "-c:v", "copy", "-c:a", "aac", "-b:a", "320k", "-ar", "48000", "-t", dur,
                     "-movflags", "+faststart", a.out], check=True)
@@ -131,11 +170,20 @@ def main():
         offs = [min((r["onset_off_ms"], r["peak_off_ms"]), key=abs) for r in sy]
         good = sum(abs(o) <= 60 for o in offs)
         worst = max(offs, key=abs) if offs else 0
-        print(f"  sfx timing: {good}/{len(sy)} cues hit within ±60 ms of their frame (worst {worst:+d} ms)")
+        print(f"  sfx timing (per cue, measured at mix time): {good}/{len(sy)} cues within ±60 ms of their frame "
+              f"(worst {worst:+d} ms)")
     used, need = credits(cues, f"{stem}-CREDITS.md", os.path.basename(a.out))
     print(f"  credits: {stem}-CREDITS.md" + (f"  ({len(need)} sound(s) need attribution)" if need else ""))
+    idx = common.load_index()
+    unchecked = [s for s in used if (idx[s].get("license_check") or {}).get("status") != "ok"]
+    if unchecked:
+        print(f"  license: {len(unchecked)} sound(s) not confirmed at source: {', '.join(unchecked[:6])}"
+              f"{' …' if len(unchecked) > 6 else ''}  (run `library verify --ids …` or check their links)")
     common.ensure_lib()
-    proj = os.path.join(common.PROJECTS, f"{common.now()[:10]}-{os.path.basename(stem)}.cues.json")
+    base = os.path.join(common.PROJECTS, f"{common.now().replace(' ', '_').replace(':', '')}-{os.path.basename(stem)}")
+    proj, k = f"{base}.cues.json", 2
+    while os.path.exists(proj):                 # never overwrite an earlier video's cue sheet
+        proj, k = f"{base}-{k}.cues.json", k + 1
     shutil.copy(a.cues, proj)
     common.append_history({"date": common.now(), "video": os.path.abspath(a.video), "output": os.path.abspath(a.out),
                            "brand": a.brand, "mode": a.mode, "cues": proj, "sounds": used,

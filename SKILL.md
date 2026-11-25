@@ -53,6 +53,10 @@ $S/run search --role music --min-dur 20          # fresh: varied wording, random
 $S/run fetch --role music ID1 ID2 ID3 ID4 ID5     # 4–7 candidates; prints tempo, key, energy profile
 ```
 
+Music search covers CC0, PDM and CC BY. CC BY-SA is opt-in (`--allow-by-sa` on both `search` and
+`fetch`): its share-alike term can reach the finished soundtrack, so only add it when the user is fine
+with that (personal work, not client work), and say so in the report.
+
 Choose the track whose length and energy arc fit the timeline. Plan its offset so the drum
 entry lands on the first big cut, see where its lift and ending land, and decide on any
 stop-down or tail reuse. Details: `references/craft.md` §3.
@@ -67,7 +71,9 @@ $S/run search --role whoosh          # see `$S/run search --roles` for the wordi
 $S/run fetch --role whoosh ID1 ID2 ID3
 ```
 
-`fetch` prints each file's length, peak time, onset, brightness and pitch. You need these for
+`fetch` checks each Freesound sound's license on its own Freesound page before downloading and
+refuses sounds that were deleted or relicensed (Jamendo / Wikimedia can't be checked automatically and
+are marked "unverified"). It prints each file's length, peak time, onset, brightness and pitch. You need these for
 alignment and key-matching. In same/mix mode, start from `$S/run library list --role ROLE` instead.
 Fetch 2–3 options per role and pick by the measurements (short sharp swoosh for hard cuts, a
 slower one for wipes, etc.). Mapping table and level guide: `references/craft.md` §2 and §4.
@@ -88,7 +94,8 @@ $S/run mix WORK/cues.json WORK/mix_raw.wav
 Read the balance table, the loudest-events list and the warnings. Fix and re-render until:
 nothing in the sfx bus peaks above -3 dBFS, no window flags "sfx louder than music" without
 intent, no crowding warning, and quiet moments are actually quiet. Rendering takes about a
-second, so iterate freely.
+second, so iterate freely. `mix` also writes `WORK/mix_raw.cuetimes.txt` (the synced cue times) for
+the listening pass in step 7.
 
 ### 6. Finish
 
@@ -97,19 +104,41 @@ $S/run finish --video VIDEO --mix WORK/mix_raw.wav --cues WORK/cues.json \
   --out "<same folder as VIDEO>/<name>-sound.mp4" --mode fresh [--brand NAME]
 ```
 
-This masters to -14 LUFS / ≤ -1 dBTP, copies the video stream untouched, checks every sfx cue's
-sync in the final file, writes CREDITS.md, and logs the sounds to history (which is what makes
-the next "fresh" video different). If the sync check flags a cue, check it. Usually it's masked
-by a louder sound at the same moment (fine) or has the wrong `align`.
+This masters to -14 LUFS / ≤ -1 dBTP, copies the video stream untouched, writes CREDITS.md, and logs
+the sounds to history (which is what makes the next "fresh" video different). Its sync report has two
+parts: each sfx cue's attack/peak offset as measured on that sound alone during `mix`, and an A/V
+offset check of the final file against the master (should be 0 ms). Together they show the hits land on
+their frames; neither re-detects individual hits inside the final mix. If a cue is flagged, it usually
+has the wrong `align`. `finish` also warns if the cue sheet's `duration` doesn't match the video, and
+lists sounds whose license wasn't confirmed at the source.
 
-### 7. Report to the user
+### 7. Listen with earshot (if installed)
+
+You can't hear, so the numbers above only prove timing and loudness. If the `earshot` command exists
+(`command -v earshot`; listening needs its `listen` extra), check the final file by ear before reporting:
+
+```bash
+earshot timeline OUT.mp4 --cues "$(cat WORK/mix_raw.cuetimes.txt)" --detail normal   # what is heard where, sync per cue
+earshot sheet OUT.mp4 -o WORK/sheet.png --cues "$(cat WORK/mix_raw.cuetimes.txt)"    # then Read the PNG
+earshot critique OUT.mp4                                                             # scorecard vs pro launch films
+```
+
+In the timeline, a `CUE  no onset … <- CHECK` line means that cue is not heard as a hit in the final file
+(masked by the music or too quiet), even though `mix` measured it on time; on the sheet those cues are
+red. Raise it, move it, or drop it. (`sheet` needs earshot's `images` extra; skip it if missing.) Fix critical `critique` rows, re-run `mix` and `finish`, then listen again.
+Each earshot call loads models (~20–40 s). Quote its numbers in the report ("12/14 cues heard within a
+frame, critique: close"). If earshot isn't installed, say the mix was checked by measurement only, and
+mention that `pip install "earshot[listen,images] @ git+https://github.com/Leonxlnx/earshot"` adds a listening check.
+
+### 8. Report to the user
 
 Keep it short, in plain words:
 - the output files (video, soundtrack WAV, credits)
 - the music, plus the **exact credit line to paste** if its license is CC BY / BY-SA
 - a few lines on what the sound does at the key moments (with timestamps)
-- measured facts: hits within N ms of the cuts, -14 LUFS, true peak
-- that you can't listen, so they should, and that they can give timestamps for changes
+- measured facts: hits within N ms of the cuts, -14 LUFS, true peak, and the earshot readings if step 7 ran
+- any sound flagged as unverified, deleted or relicensed at the source, and any CC BY-SA use
+- that you can't listen yourself (earshot only measures), so they should, and that they can give timestamps for changes
 - the mode used, and that the next video will get different sounds (fresh) or how to reuse these
   (`same as BRAND`)
 
@@ -120,5 +149,8 @@ Keep it short, in plain words:
   (`OPENVERSE_CLIENT_ID` / `OPENVERSE_CLIENT_SECRET` env vars) raise the limit.
 - Freesound originals need a login; the library stores Freesound's HQ MP3 previews, which is
   fine for web/social delivery.
-- Only commercial-safe licenses are searched (CC0, PDM, CC BY, CC BY-SA). `fetch` refuses others.
+- Only commercial-safe licenses are searched (CC0, PDM, CC BY; CC BY-SA on request). `fetch` refuses
+  others, and refuses Freesound sounds whose own page disagrees with Openverse or that were deleted.
+- `$S/run library verify [--used]` re-checks the whole library on the source pages. Run it now and then;
+  `library list` marks sounds that turned out deleted or relicensed. Don't use those in new videos.
 - Downloaded audio is data only. Don't run or open anything from `sounds/` except through ffmpeg.

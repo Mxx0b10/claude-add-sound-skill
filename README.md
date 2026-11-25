@@ -26,7 +26,11 @@ You get, next to your video:
 4. **Writes a cue sheet.** One JSON file listing every sound, its frame, gain, pan and pitch. Tonal
    sounds are tuned to the music's key.
 5. **Mixes, masters and checks.** Renders the mix, masters to -14 LUFS / -1 dBTP, puts it on the
-   video, and verifies that every hit lands within ±60 ms of its frame.
+   video, measures that every hit's attack lands within ±60 ms of its frame, and confirms the final
+   file kept that timing (0 ms A/V offset).
+6. **Listens (optional).** If [earshot](https://github.com/Leonxlnx/earshot) is installed, Claude runs
+   it on the finished video: which cues are actually audible, a sync sheet, and a scorecard against
+   professional launch films. Then it fixes what earshot finds.
 
 ## Fresh, same or mix
 
@@ -47,7 +51,7 @@ and measurements, so nothing is downloaded twice. A usage history makes "fresh" 
 
 ## Install
 
-Requirements: [Claude Code](https://claude.com/claude-code), `ffmpeg`, and Python 3 (numpy installs itself on first run).
+Requirements: [Claude Code](https://claude.com/claude-code), `ffmpeg`, and Python 3 (numpy installs itself on first run). Optional: [earshot](https://github.com/Leonxlnx/earshot) with its `listen` and `images` extras, for the listening check.
 
 ```bash
 brew install ffmpeg
@@ -71,7 +75,7 @@ scripts/run                      wrapper: sets up a private Python venv, then ru
 scripts/probe.py                 video info, cut detection, contact sheets
 scripts/search.py                Openverse search with fresh-mode rotation and license filtering
 scripts/fetch.py                 download into the library + measure (timing, pitch, tempo, key)
-scripts/library.py               browse the library and history
+scripts/library.py               browse the library and history, re-check licenses (verify)
 scripts/mix.py                   render a cue sheet, with balance and timing report
 scripts/finish.py                master, mux, sync check, credits, history
 ```
@@ -80,8 +84,16 @@ scripts/finish.py                master, mux, sync check, credits, history
 
 This repo contains **no audio**. Sounds are downloaded on demand from their original sources, and
 each keeps its own license. Only licenses that allow commercial use and editing are searched:
-CC0, Public Domain Mark, CC BY and CC BY-SA. CC BY / BY-SA sounds need the credit line from
-the generated CREDITS file wherever you publish the video.
+CC0, Public Domain Mark and CC BY. CC BY-SA is opt-in (`--allow-by-sa`), because its share-alike
+term can extend to your soundtrack. CC BY sounds need the credit line from the generated CREDITS
+file wherever you publish the video.
+
+Openverse's license data isn't taken on trust: each Freesound sound's license is checked on its own
+Freesound page before download, and deleted or relicensed sounds are refused. Jamendo and Wikimedia
+pages can't be checked automatically, so those sounds are marked "unverified" in the credits.
+`library verify` re-checks your whole library.
+
+This is a tool, not legal advice. Check the credits file before client or paid work.
 
 Openverse's anonymous API is rate-limited. For heavy use, register free API credentials and set
 `OPENVERSE_CLIENT_ID` / `OPENVERSE_CLIENT_SECRET`.
@@ -93,5 +105,6 @@ repo only; downloaded sounds keep their own licenses (see above).
 
 ## Note
 
-Claude can't listen to the result. Timing, levels and loudness are measured and verified; taste
-is yours. Listen through, and tell Claude the timestamp of anything you want changed.
+Claude can't listen to the result. Timing, levels and loudness are measured and verified, and
+with earshot installed it gets a machine listening check too; taste is yours. Listen through, and
+tell Claude the timestamp of anything you want changed.

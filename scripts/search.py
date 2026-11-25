@@ -7,7 +7,8 @@
 
 Fresh mode (default) rotates through several wordings per role, picks a random results page
 (1–3) and hides sounds used in your last 10 videos, so each video gets new sounds.
-Only licenses that allow commercial use are requested (CC0 / CC BY / CC BY-SA / PDM).
+Only licenses that allow commercial use are requested: CC0 / PDM for sfx, plus CC BY for music.
+CC BY-SA is opt-in (--allow-by-sa): its share-alike term can reach the finished soundtrack.
 Results are cached so `run fetch` can download without another API call.
 """
 import argparse, json, os, random, sys, time, urllib.error, urllib.parse, urllib.request
@@ -15,7 +16,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import common  # noqa: E402
 
 API = "https://api.openverse.org/v1"
-UA = "claude-add-sound/1.0 (personal sound-design skill)"
+UA = common.UA
 
 ROLE_QUERIES = {
     "whoosh":  ["whoosh", "swoosh", "swish", "woosh transition", "air whoosh", "cinematic whoosh",
@@ -97,7 +98,9 @@ def main():
     ap.add_argument("--page", type=int)
     ap.add_argument("--min-dur", type=float, default=0)
     ap.add_argument("--max-dur", type=float, default=0, help="default depends on role (whoosh 6 s, tick 2 s, …)")
-    ap.add_argument("--license", help="override, e.g. cc0  (default: cc0 for sfx, cc0,by,by-sa for music)")
+    ap.add_argument("--license", help="override, e.g. cc0  (default: cc0,pdm for sfx, cc0,by,pdm for music)")
+    ap.add_argument("--allow-by-sa", action="store_true",
+                    help="also search CC BY-SA (share-alike: the soundtrack may have to be shared under BY-SA too)")
     ap.add_argument("--roles", action="store_true")
     a = ap.parse_args()
     if a.roles:
@@ -107,7 +110,9 @@ def main():
     if not (a.role or a.query):
         ap.error("give --role or --query")
     kind = a.kind or ("music" if a.role == "music" else "sfx")
-    lic = a.license or ("cc0,by,by-sa,pdm" if kind == "music" else "cc0,pdm")
+    lic = a.license or ("cc0,by,pdm" if kind == "music" else "cc0,pdm")
+    if a.allow_by_sa and "by-sa" not in lic.split(","):
+        lic += ",by-sa"
     rng = random.Random()
     if a.query:
         queries = [a.query]

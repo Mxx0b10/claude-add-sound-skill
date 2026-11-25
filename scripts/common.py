@@ -5,6 +5,8 @@ import re
 import subprocess
 import tempfile
 import time
+import urllib.error
+import urllib.request
 
 import numpy as np
 
@@ -26,6 +28,45 @@ LICENSE_URLS = {
     "by": "https://creativecommons.org/licenses/by/{v}/",
     "by-sa": "https://creativecommons.org/licenses/by-sa/{v}/",
 }
+
+
+UA = "claude-add-sound/1.1 (open-license sound design skill)"
+_CC = re.compile(r"creativecommons\.org/(licenses|publicdomain)/([a-z+-]+)/([0-9.]+)")
+
+
+def verify_license(landing_url):
+    """Check a sound's license on its own source page (Openverse metadata can be stale or wrong,
+    and sounds get deleted). Freesound pages are checked; other sources come back 'unverified'.
+    Returns {"status": ok|mismatch|deleted|unverified, "license", "license_version", "note", "checked"}."""
+    out = {"status": "unverified", "license": None, "license_version": None, "note": "", "checked": now()}
+    if not landing_url or "freesound.org" not in landing_url:
+        out["note"] = "source page not machine-checkable (only Freesound is); license is Openverse's"
+        return out
+    try:
+        req = urllib.request.Request(landing_url, headers={"User-Agent": UA})
+        html = urllib.request.urlopen(req, timeout=30).read(400_000).decode("utf-8", "replace")
+    except urllib.error.HTTPError as e:
+        if e.code in (404, 410):
+            out.update(status="deleted", note=f"source page returns {e.code}")
+        else:
+            out["note"] = f"could not load source page (HTTP {e.code})"
+        return out
+    except Exception as e:  # network down, timeout
+        out["note"] = f"could not load source page ({type(e).__name__})"
+        return out
+    if "<title>Freesound - Deleted sound" in html:
+        out.update(status="deleted", note="removed from Freesound by its author")
+        return out
+    m = _CC.search(html)
+    if not m:
+        out["note"] = "no license link found on the source page"
+        return out
+    kind, name, ver = m.groups()
+    lic = {"zero": "cc0", "mark": "pdm"}.get(name, name) if kind == "publicdomain" else name
+    out.update(status="ok" if lic in OK_LICENSES else "mismatch", license=lic, license_version=ver)
+    if lic not in OK_LICENSES:
+        out["note"] = f"source page says {lic} {ver}, which does not allow commercial use / edits"
+    return out
 
 
 def ensure_lib():

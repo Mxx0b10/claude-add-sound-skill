@@ -144,6 +144,8 @@ def main():
             warn.append(f"4+ sfx start within 150 ms around {starts[a_]:.2f}s — likely muddy")
             break
     json.dump({"events": report, "warnings": warn}, open(stem + ".report.json", "w"), indent=1)
+    # cue times of the synced hits, for a listening check of the final file (earshot timeline/sheet --cues)
+    open(stem + ".cuetimes.txt", "w").write(",".join(f"{r_['at']:.3f}" for r_ in report if r_["sync"]) + "\n")
     sy = [r_ for r_ in report if r_["sync"]]
     ok = [r_ for r_ in sy if min(abs(r_["onset_off_ms"]), abs(r_["peak_off_ms"])) <= 60]
     print(f"\nwrote {out}  (peak {float(common.db(np.abs(mix).max())):.1f} dBFS, {len(report)} events)")

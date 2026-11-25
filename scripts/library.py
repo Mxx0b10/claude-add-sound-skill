@@ -4,8 +4,10 @@
   run library info freesound-507466
   run library history [--n 10] [--brand cortex]
   run library brand cortex          # sounds + cue sheet from that brand's latest video (for same / mix mode)
+  run library verify [--role whoosh] [--used] [--ids a b]   # re-check licenses on the source pages
+                                    # (finds sounds deleted at the source or relicensed since download)
 """
-import argparse, json, os, sys
+import argparse, json, os, sys, time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import common  # noqa: E402
 
@@ -17,6 +19,8 @@ def main():
     p = sub.add_parser("info"); p.add_argument("sound_id")
     p = sub.add_parser("history"); p.add_argument("--n", type=int, default=10); p.add_argument("--brand")
     p = sub.add_parser("brand"); p.add_argument("name")
+    p = sub.add_parser("verify"); p.add_argument("--role"); p.add_argument("--ids", nargs="+")
+    p.add_argument("--used", action="store_true", help="only sounds used in a logged video")
     a = ap.parse_args()
     idx = common.load_index()
     hist = common.load_history()
@@ -33,9 +37,11 @@ def main():
             an = v.get("analysis", {})
             extra = f" {an.get('bpm')}bpm {an.get('key')}" if v.get("kind") == "music" else \
                     f" peak@{an.get('peak_t')} pitch {an.get('pitch') or '-'}"
+            st = (v.get("license_check") or {}).get("status")
+            warn = "  ⚠ " + st.upper() if st in ("deleted", "mismatch") else ""
             print(f"{k:18} {','.join(v.get('roles', [])):10} {an.get('dur', 0):6.2f}s{extra:22} "
                   f"{v.get('license')}{v.get('license_version') or ''}  last used {last_used.get(k, 'never'):16} "
-                  f"{(v.get('title') or '')[:48]}")
+                  f"{(v.get('title') or '')[:48]}{warn}")
     elif a.cmd == "info":
         print(json.dumps(idx.get(a.sound_id) or {"error": "not in library"}, indent=1, ensure_ascii=False))
     elif a.cmd == "history":
@@ -43,6 +49,34 @@ def main():
         for h in rows:
             print(f"{h.get('date')}  brand={h.get('brand') or '-':10} mode={h.get('mode'):5} "
                   f"{os.path.basename(h.get('output', ''))}  ({len(h.get('sounds', []))} sounds) cues={h.get('cues')}")
+    elif a.cmd == "verify":
+        ids = a.ids or [k for k, v in idx.items() if (not a.role or a.role in v.get("roles", []))
+                        and (not a.used or k in last_used)]
+        problems = []
+        for n, k in enumerate(ids):
+            v = idx.get(k)
+            if not v:
+                print(f"{k}: not in library"); continue
+            chk = common.verify_license(v.get("landing_url"))
+            v["license_check"] = {x: chk.get(x) for x in ("status", "note", "checked")}
+            if chk["status"] == "ok" and chk["license"] != v.get("license"):
+                chk["status"] = "mismatch"
+                chk["note"] = f"source page now says {chk['license']} {chk['license_version']} (index: {v.get('license')})"
+                v["license_check"].update(status="mismatch", note=chk["note"])
+            if chk["status"] in ("deleted", "mismatch"):
+                problems.append((k, chk["note"], last_used.get(k)))
+            print(f"[{n + 1}/{len(ids)}] {k:18} {chk['status']:10} {chk['note']}")
+            if "freesound.org" in (v.get("landing_url") or ""):
+                time.sleep(0.5)                # be polite to Freesound
+        common.save_index(idx)
+        if problems:
+            print(f"\n{len(problems)} problem(s). Don't use these in new videos; for videos already out, "
+                  "the license you downloaded under still applies (CC licenses can't be revoked), "
+                  "but keep the CREDITS file as your record:")
+            for k, note, used in problems:
+                print(f"  {k:18} {note}" + (f"  (last used {used})" if used else ""))
+        else:
+            print("\nno problems found")
     elif a.cmd == "brand":
         rows = [h for h in hist if h.get("brand") == a.name]
         if not rows:
